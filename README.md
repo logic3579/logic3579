@@ -1,8 +1,8 @@
 <img aligh='right' src="img/hello_world.png" alt="Yakir" />
 
 <h2>👋 Hello there</h3>
-<p>📜 My website：<a href="https://songlh.top/" target="_blank">359sun.top</a>. will write some technical blogs and life records</p>
-<p>🌱 I’m studying...</p>
+<p>📜 My website：<a href="https://359sun.top/" target="_blank">359sun.top</a>. will write some technical blogs and life records</p>
+<p>🌱 I’m studying ...</p>
 
 <h2>🤔 Summary</h3>
   <p align="center">
@@ -16,7 +16,7 @@
 
 <h2>🛠 Languages and tools</h3>
   <p align="center">
-      <img width="49%" src="https://github-widgetbox.vercel.app/api/skills?frameworks=django&tools=git,redis,nodejs,nginx,aws,gcp&includeNames=true&theme=aether" alt="" />
+      <img width="49%" src="https://github-widgetbox.vercel.app/api/skills?frameworks=django&tools=git,nginx,aws&includeNames=true&theme=aether" alt="" />
       <img width="49%" src="https://github-widgetbox.vercel.app/api/skills?names=markdown,json,yaml,xml,lua,bash&includeNames=true&theme=aether" alt="" />
   </p>
   
