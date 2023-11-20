@@ -1,4 +1,4 @@
-<img aligh='right' src="img/hello_world.png" alt="Yakir" />
+<img aligh='center' src="img/hello_world.png" alt="Yakir" />
 
 <h2>👋 Hello there</h3>
 <p>📜 My website：<a href="https://359sun.top/" target="_blank">359sun.top</a>. will write some technical blogs and life records</p>
@@ -14,12 +14,11 @@
     <img width="43%" src="https://github-readme-stats.vercel.app/api/top-langs/?username=yakir3&layout=compact&theme=omni" alt="Top languages" />
   </p>
 
-<h2>🛠 Languages and tools</h3>
+<h2>🛠 Languages and Tools</h3>
   <p align="center">
-      <img width="49%" src="https://github-widgetbox.vercel.app/api/skills?frameworks=django&tools=git,nginx,aws&includeNames=true&theme=aether" alt="" />
-      <img width="49%" src="https://github-widgetbox.vercel.app/api/skills?names=markdown,json,yaml,xml,lua,bash&includeNames=true&theme=aether" alt="" />
+      <img width="49%" src="https://github-widgetbox.vercel.app/api/skills?names=shell,python,markdown,json,yaml&includeNames=true&theme=aether" alt="Languages" />
+      <img width="49%" src="https://github-widgetbox.vercel.app/api/skills?frameworks=django&tools=git,nginx,redis,aws&includeNames=true&theme=aether" alt="Tools" />
   </p>
-  
 
 <!--
   <p style="display: flex;align-items: center;">
