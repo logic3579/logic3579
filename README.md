@@ -1,4 +1,4 @@
-<img aligh='center' src="img/hello_world.png" alt="Yakir" />
+<img aligh='center' src="img/hello_world.png" alt="hello" width="1080" height="379"/>
 
 <h2>👋 Hello there</h3>
 <p>📜 My website：<a href="https://359sun.top/" target="_blank">359sun.top</a>. will write some technical blogs and life records</p>
