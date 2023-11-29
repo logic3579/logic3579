@@ -16,8 +16,8 @@
 
 <h2>🛠 Languages and Tools</h3>
   <p align="center">
-      <img width="49%" src="https://github-widgetbox.vercel.app/api/skills?names=shell,python,markdown,json,yaml&includeNames=true&theme=aether" alt="Languages" />
-      <img width="49%" src="https://github-widgetbox.vercel.app/api/skills?frameworks=django&tools=git,nginx,redis,aws&includeNames=true&theme=aether" alt="Tools" />
+      <img width="49%" src="https://github-widgetbox.vercel.app/api/skills?names=python,bash,json,yaml,markdown&software=linux&includeNames=true&theme=aether" alt="Languages" />
+      <img width="49%" src="https://github-widgetbox.vercel.app/api/skills?frameworks=django&tools=git,docker,redis,nginx,aws&includeNames=true&theme=aether" alt="Tools" />
   </p>
 
 <!--
