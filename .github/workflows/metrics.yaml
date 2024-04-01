@@ -5,20 +5,20 @@ on:
   # (optional) Run workflow manually
   workflow_dispatch:
   # (optional) Run workflow when pushing on master/main
-  push: {branches: ["master", "main"]}
+  push: {branches: ["main"]}
 jobs:
   github-metrics:
     runs-on: ubuntu-latest
     steps:
       - name: Classic Metrics
-        uses: lowlighter/metrics@v3.34
+        uses: lowlighter/metrics@latest
         with:
           filename: metrics.classic.svg
           token: ${{ secrets.METRICS_TOKEN }}
           base: header, repositories
           plugin_lines: yes
       - name: Starred repositories
-        uses: lowlighter/metrics@v3.34
+        uses: lowlighter/metrics@latest
         with:
           filename: metrics.plugin.repositories.starred.svg
           token: ${{ secrets.METRICS_TOKEN }}
@@ -26,7 +26,7 @@ jobs:
           plugin_repositories: yes
           plugin_repositories_starred: 10
       - name: Full history calendar
-        uses: lowlighter/metrics@v3.34
+        uses: lowlighter/metrics@latest
         with:
           filename: metrics.plugin.calendar.full.svg
           token: ${{ secrets.METRICS_TOKEN }}
