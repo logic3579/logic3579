@@ -1,9 +1,9 @@
-## 👋 Yakir Lin
+## :wave: Yakir Lin
 
 + Using Kubernetes, Bash/Go/Python, AliCloud/AWS/GCP, etc.
 + I'll write some technical blogs and life records at <https://359sun.top/>.
 
-## 🤔 Summary
+## :green_book: Summary
 
 <a href="https://github.com/lowlighter/metrics">
   <img src="/metrics.classic.svg"/>
@@ -23,7 +23,7 @@
   </a>
 </details>
 
-## Skills and Tools
+## :hammer_and_wrench: Skills and Tools
 
 <!-- Badges List: https://github.com/alexandresanlim/Badges4-README.md-Profile -->
 
