@@ -1,3 +1,5 @@
+[comment]: # (README Emoji: https://github.com/ikatyang/emoji-cheat-sheet/blob/master/README.md)
+
 ## :wave: Yakir Lin
 
 + Using Kubernetes, Bash/Go/Python, AliCloud/AWS/GCP, etc.
