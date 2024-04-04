@@ -13,14 +13,14 @@
 
 <details>
   <summary>Projects I created</summary>
-  <a href="https://github.com/ryan4yin?tab=repositories&q=&type=&language=&sort=stargazers">
+  <a href="https://github.com/yakir3?tab=repositories&q=&type=&language=&sort=stargazers">
     <img src="/metrics.plugin.repositories.starred.svg"/>
   </a>
 </details>
 
 <details>
   <summary>📆 Commit calendar</summary>
-  <a href="https://github.com/ryan4yin?tab=repositories&q=&type=&language=&sort=stargazers">
+  <a href="https://github.com/yakir3?tab=repositories&q=&type=&language=&sort=stargazers">
     <img src="/metrics.plugin.calendar.full.svg"/>
   </a>
 </details>
