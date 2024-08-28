@@ -3,7 +3,7 @@
 ## :wave: Yakir Lin
 
 + Using Kubernetes, Bash/Go/Python, AliCloud/AWS/GCP, etc.
-+ I'll write some technical blogs and life records at <https://359sun.top/>.
++ I'll write some technical blogs and life records at <https://yakir.top/>.
 
 
 ## :green_book: Summary
