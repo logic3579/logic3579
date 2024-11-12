@@ -1,3 +1,5 @@
+[![GitHub Action](https://img.shields.io/github/actions/workflow/status/yakir3/yakir3/metrics.yaml?label=GitHub%20Actions&logo=github&logoColor=white)](https://github.com/yakir3/yakir3/actions/workflows/metrics.yaml)
+
 [comment]: # (README Emoji: https://github.com/ikatyang/emoji-cheat-sheet/blob/master/README.md)
 
 ## :wave: Yakir Lin
