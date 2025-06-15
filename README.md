@@ -11,20 +11,20 @@
 ## :green_book: Summary
 
 <a href="https://github.com/lowlighter/metrics">
-  <img src="/metrics.classic.svg"/>
+  <img src="./metrics.classic.svg"/>
 </a>
 
 <details>
   <summary>Projects I created</summary>
   <a href="https://github.com/logic3579?tab=repositories&q=&type=&language=&sort=stargazers">
-    <img src="/metrics.plugin.repositories.starred.svg"/>
+    <img src="./metrics.plugin.repositories.starred.svg"/>
   </a>
 </details>
 
 <details>
   <summary>📆 Commit calendar</summary>
   <a href="https://github.com/logic3579?tab=repositories&q=&type=&language=&sort=stargazers">
-    <img src="/metrics.plugin.calendar.full.svg"/>
+    <img src="./metrics.plugin.calendar.full.svg"/>
   </a>
 </details>
 
