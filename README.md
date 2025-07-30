@@ -1,5 +1,4 @@
 [![Update Metrics](https://github.com/logic3579/logic3579/actions/workflows/metrics.yaml/badge.svg)](https://github.com/logic3579/logic3579/actions/workflows/metrics.yaml)
-
 [![Sync GitHub Repos to GitLab and Gitee](https://github.com/logic3579/logic3579/actions/workflows/sync-repos.yml/badge.svg)](https://github.com/logic3579/logic3579/actions/workflows/sync-repos.yml)
 
 ## :wave: Hello, I'm Logic
@@ -8,7 +7,8 @@
 Passionate about infrastructure automation and cloud-native technologies.
 
 ### :globe_with_meridians: About Me
-- :wrench: Experience with: Kubernetes, Bash/Go/Python, AliCloud/AWS/GCP
+
+- :wrench: Experience with: Kubernetes, Bash/Golang/Python, AliCloud/AWS/GCP
 - :memo: Writing technical blogs and life records at [yakir.top](https://yakir.top/)
 - :seedling: Currently learning: [Istio](https://istio.io/) and [Terraform](https://www.terraform.io/)
 
