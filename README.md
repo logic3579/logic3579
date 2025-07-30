@@ -1,14 +1,17 @@
-[![GitHub Action](https://img.shields.io/github/actions/workflow/status/logic3579/logic3579/metrics.yaml?label=GitHub%20Actions&logo=github&logoColor=white)](https://github.com/logic3579/logic3579/actions/workflows/metrics.yaml)
+[![Update Metrics](https://github.com/logic3579/logic3579/actions/workflows/metrics.yaml/badge.svg)](https://github.com/logic3579/logic3579/actions/workflows/metrics.yaml)
 
-[comment]: # (README Emoji: https://github.com/ikatyang/emoji-cheat-sheet/blob/master/README.md)
+## :wave: Hello, I'm Logic
 
-## :wave: Logic
+**DevOps Engineer & Cloud Specialist**  
+Passionate about infrastructure automation and cloud-native technologies.
 
-+ Using Kubernetes, Bash/Go/Python, AliCloud/AWS/GCP, etc.
-+ I'll write some technical blogs and life records at <https://yakir.top/>.
+### :globe_with_meridians: About Me
+- :wrench: Experience with: Kubernetes, Bash/Go/Python, AliCloud/AWS/GCP
+- :memo: Writing technical blogs and life records at [yakir.top](https://yakir.top/)
+- :seedling: Currently learning: [Istio](https://istio.io/) and [Terraform](https://www.terraform.io/)
 
 
-## :green_book: Summary
+## :bar_chart: GitHub Metrics
 
 <a href="https://github.com/lowlighter/metrics">
   <img src="./metrics.classic.svg"/>
@@ -28,45 +31,40 @@
   </a>
 </details>
 
+## :hammer_and_wrench: Tech Stack
 
-## :hammer_and_wrench: Skills and Tools
-<!-- Badges List: https://github.com/alexandresanlim/Badges4-README.md-Profile -->
-<!-- Badges Search: https://github.com/Aveek-Saha/GitHub-Profile-Badges -->
-[![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/torvalds/linux)
-[![CentOS](https://img.shields.io/badge/Cent%20OS-262577?style=for-the-badge&logo=CentOS&logoColor=white)](https://www.centos.org/)
-[![Ubuntu](https://img.shields.io/badge/Ubuntu-E95420?style=for-the-badge&logo=ubuntu&logoColor=white)](https://www.ubuntu.com/)
-[![MacOS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=apple&logoColor=white)](https://www.freebsd.org/)
-
-
-[![Alibaba Cloud](https://img.shields.io/badge/Alibaba%20Cloud-FF6A00.svg?style=for-the-badge&logo=Alibaba-Cloud&logoColor=white)](https://console.aliyun.com/)
-[![Amazon AWS](https://img.shields.io/badge/Amazon_AWS-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white)](https://aws.amazon.com/)
+### :cloud: Cloud Platforms
+[![Alibaba Cloud](https://img.shields.io/badge/Alibaba_Cloud-FF6A00?style=for-the-badge&logo=alibabacloud&logoColor=white)](https://www.aliyun.com/)
+[![AWS](https://img.shields.io/badge/AWS-%23FF9900?style=for-the-badge&logo=amazon-aws&logoColor=white)](https://aws.amazon.com/)
 [![Google Cloud](https://img.shields.io/badge/Google_Cloud-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white)](https://cloud.google.com/)
-<!--[![Terraform](https://img.shields.io/badge/Terraform-7B42BC?style=for-the-badge&logo=terraform&logoColor=white)](https://github.com/hashicorp/terraform)-->
 
+### :computer: Operating Systems
+[![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://www.linux.org/)
+[![Ubuntu](https://img.shields.io/badge/Ubuntu-E95420?style=for-the-badge&logo=ubuntu&logoColor=white)](https://ubuntu.com/)
+[![macOS](https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white)](https://www.apple.com/macos/)
 
-[![ohmyzsh](https://img.shields.io/badge/Zsh-F15A24.svg?style=for-the-badge&logo=Zsh&logoColor=white)](https://github.com/ohmyzsh/ohmyzsh)
-[![Vim](https://img.shields.io/badge/Vim-019733.svg?style=for-the-badge&logo=Vim&logoColor=white)](https://github.com/vim/vim)
-[![Git](https://img.shields.io/badge/Git-F05032.svg?style=for-the-badge&logo=Git&logoColor=white)](https://github.com/git-guides/install-git)
+### :gear: DevOps Tools
+[![Kubernetes](https://img.shields.io/badge/kubernetes-%23326ce5?style=for-the-badge&logo=kubernetes&logoColor=white)](https://kubernetes.io/)
+[![Docker](https://img.shields.io/badge/docker-%230db7ed?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Ansible](https://img.shields.io/badge/ansible-%231A1918?style=for-the-badge&logo=ansible&logoColor=white)](https://www.ansible.com/)
+[![Jenkins](https://img.shields.io/badge/jenkins-%23D24939?style=for-the-badge&logo=jenkins&logoColor=white)](https://www.jenkins.io/)
 
+### :keyboard: Development
+[![Go](https://img.shields.io/badge/go-%2300ADD8?style=for-the-badge&logo=go&logoColor=white)](https://golang.org/)
+[![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)](https://www.python.org/)
+[![Bash](https://img.shields.io/badge/bash-%23121011?style=for-the-badge&logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
 
-[![Bash](https://img.shields.io/badge/GNU%20Bash-4EAA25.svg?style=for-the-badge&logo=GNU-Bash&logoColor=white)](https://www.gnu.org/software/bash/)
-[![Go](https://img.shields.io/badge/go-%2300ADD8.svg?style=for-the-badge&logo=go&logoColor=white)](https://github.com/golang/go)
-[![Python](https://img.shields.io/badge/python-%2314354C.svg?style=for-the-badge&logo=python&logoColor=white)](https://github.com/python/cpython)
+### :floppy_disk: Databases & Middleware
+[![Redis](https://img.shields.io/badge/redis-%23DD0031?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/)
+[![Kafka](https://img.shields.io/badge/Apache_Kafka-231F20?style=for-the-badge&logo=apache-kafka&logoColor=white)](https://kafka.apache.org/)
+[![Nginx](https://img.shields.io/badge/nginx-%23009639?style=for-the-badge&logo=nginx&logoColor=white)](https://www.nginx.com/)
 
+### :toolbox: Tools
+[![Git](https://img.shields.io/badge/git-%23F05033?style=for-the-badge&logo=git&logoColor=white)](https://git-scm.com/)
+[![Vim](https://img.shields.io/badge/VIM-%2311AB00?style=for-the-badge&logo=vim&logoColor=white)](https://www.vim.org/)
+[![Zsh](https://img.shields.io/badge/Zsh-%23F15A24?style=for-the-badge&logo=zsh&logoColor=white)](https://www.zsh.org/)
 
-[![Ansible](https://img.shields.io/badge/Ansible-000000?style=for-the-badge&logo=ansible&logoColor=white)](https://www.ansible.com/)
-[![Django](https://img.shields.io/badge/Django-092E20.svg?style=for-the-badge&logo=Django&logoColor=white)](https://github.com/django/django)
-[![Docker](https://img.shields.io/badge/Docker-2496ED.svg?style=for-the-badge&logo=Docker&logoColor=white)](https://www.docker.com/)
-[![Kubernetes](https://img.shields.io/badge/kubernetes-%23326ce5.svg?style=for-the-badge&logo=kubernetes&logoColor=white)](https://github.com/kubernetes/kubernetes)
-<!--[![Istio](https://img.shields.io/badge/Istio-466BB0?style=for-the-badge&logo=Istio&logoColor=white)](https://github.com/istio/istio)-->
-
-
-[![Apache Kafka](https://img.shields.io/badge/Apache%20Kafka-231F20.svg?style=for-the-badge&logo=Apache-Kafka&logoColor=white)](https://github.com/apache/kafka)
-[![Jenkins](https://img.shields.io/badge/Jenkins-D24939.svg?style=for-the-badge&logo=Jenkins&logoColor=white)](https://github.com/jenkinsci/jenkins)
-[![Nginx](https://img.shields.io/badge/Nginx-%23009639.svg?style=for-the-badge&logo=nginx&logoColor=white)](https://github.com/nginx/nginx)
-[![Redis](https://img.shields.io/badge/Redis-DC382D.svg?style=for-the-badge&logo=Redis&logoColor=white)](https://github.com/redis/redis)
-
-
-[![MARKDOWN](https://img.shields.io/badge/Markdown-000000.svg?style=for-the-badge&logo=Markdown&logoColor=white)]()
-[![JSON](https://img.shields.io/badge/JSON-000000.svg?style=for-the-badge&logo=JSON&logoColor=white)]()
-[![YAML](https://img.shields.io/badge/YAML-CB171E.svg?style=for-the-badge&logo=YAML&logoColor=white)]()
+### :page_facing_up: Formats
+[![Markdown](https://img.shields.io/badge/markdown-%23000000?style=for-the-badge&logo=markdown&logoColor=white)](https://daringfireball.net/projects/markdown/)
+[![YAML](https://img.shields.io/badge/YAML-%23CB171E?style=for-the-badge&logo=yaml&logoColor=white)](https://yaml.org/)
+[![JSON](https://img.shields.io/badge/json-%23000000?style=for-the-badge&logo=json&logoColor=white)](https://www.json.org/)
