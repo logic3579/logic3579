@@ -1,5 +1,7 @@
 [![Update Metrics](https://github.com/logic3579/logic3579/actions/workflows/metrics.yaml/badge.svg)](https://github.com/logic3579/logic3579/actions/workflows/metrics.yaml)
 
+[![Sync GitHub Repos to GitLab and Gitee](https://github.com/logic3579/logic3579/actions/workflows/sync-repos.yml/badge.svg)](https://github.com/logic3579/logic3579/actions/workflows/sync-repos.yml)
+
 ## :wave: Hello, I'm Logic
 
 **DevOps Engineer & Cloud Specialist**  
