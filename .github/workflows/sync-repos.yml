@@ -3,7 +3,7 @@ name: Sync GitHub Repos to GitLab and Gitee
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 03 */15 * *"
+    - cron: "0 03 */7 * *"
 
 jobs:
   get_repos:
