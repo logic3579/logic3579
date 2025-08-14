@@ -22,18 +22,21 @@ jobs:
           github-token: ${{ secrets.GH_TOKEN }}
           script: |
             try {
+              // Fetch repositories
               const { data } = await github.rest.repos.listForAuthenticatedUser({
                 per_page: 100,
                 sort: 'updated',
                 direction: 'desc'
               });
-              const repos = data.filter(repo => !repo.archived).map(repo => repo.name);
+
+              // Filter arvhived and fork repositories
+              const repos = data.filter(repo => !repo.archived && !repo.fork).map(repo => repo.name);
               
-              // 将数组转换为单行 JSON 字符串
+              // Convert the repositories array into a single-line JSON string
               const repoJson = JSON.stringify(repos).replace(/\n/g, '');
               console.log('Repo JSON:', repoJson);
               
-              // 使用环境变量中转，避免直接设置复杂输出
+              // Export to environment variables
               core.exportVariable('REPO_LIST_JSON', repoJson);
             } catch (error) {
               core.setFailed('Failed to fetch repos: ' + error.message);
@@ -85,7 +88,7 @@ jobs:
           git remote add gitlab https://${{ env.GITLAB_REPO_OWNER }}:$GITLAB_TOKEN@gitlab.com/${{ env.GITLAB_REPO_OWNER }}/${{ matrix.repo }}.git
           git remote add gitee https://${{ env.GITEE_REPO_OWNER }}:$GITEE_TOKEN@gitee.com/${{ env.GITEE_REPO_OWNER }}/${{ matrix.repo }}.git
 
-          # 避免重复推送同一提交
+          # Avoid pushing the same commit repeatedly.
           git fetch gitlab main || true
           git fetch gitee main || true
           if ! git diff --quiet gitlab/main..main; then
