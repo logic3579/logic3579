@@ -72,7 +72,7 @@
                                     </svg>
                                     <div class="name">
                                         <span>logic3579/terraform</span>
-                                        <span>created 13 days ago</span>
+                                        <span>created 14 days ago</span>
                                     </div>
                                 </div>
                                 <div class="field description">
@@ -458,9 +458,9 @@
                                 <div class="field infos">
                                     <div class="language">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
-                                            <path fill="#f0c040" fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8z"/>
+                                            <path fill="#e34c26" fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8z"/>
                                         </svg>
-                                        Smarty
+                                        HTML
                                     </div>
                                     <div>
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
