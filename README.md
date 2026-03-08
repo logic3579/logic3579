@@ -8,28 +8,28 @@ Passionate about infrastructure automation and cloud-native technologies.
 
 ### :globe_with_meridians: About Me
 
-- :wrench: Experience with: Kubernetes, Bash/Golang/Python, AliCloud/AWS/GCP
-- :memo: Writing technical blogs and life records at [yakir.top](https://yakir.top/)
-- :seedling: Currently learning: [Istio](https://istio.io/) and [Terraform](https://www.terraform.io/)
+- :wrench: **Experience:** Kubernetes, Bash/Golang/Python, AliCloud/AWS/GCP
+- :memo: Technical blog & notes: [yakir.top](https://yakir.top/)
+- :seedling: **Learning:** [Istio](https://istio.io/), [Terraform](https://www.terraform.io/)
 
 
 ## :bar_chart: GitHub Metrics
 
 <a href="https://github.com/lowlighter/metrics">
-  <img src="./metrics.classic.svg"/>
+  <img src="./metrics.classic.svg" alt="GitHub metrics (classic)"/>
 </a>
 
 <details>
   <summary>Projects I created</summary>
   <a href="https://github.com/logic3579?tab=repositories&q=&type=&language=&sort=stargazers">
-    <img src="./metrics.plugin.repositories.starred.svg"/>
+    <img src="./metrics.plugin.repositories.starred.svg" alt="Starred repositories"/>
   </a>
 </details>
 
 <details>
-  <summary>📆 Commit calendar</summary>
-  <a href="https://github.com/logic3579?tab=repositories&q=&type=&language=&sort=stargazers">
-    <img src="./metrics.plugin.calendar.full.svg"/>
+  <summary>:calendar: Commit calendar</summary>
+  <a href="https://github.com/logic3579">
+    <img src="./metrics.plugin.calendar.full.svg" alt="Full commit calendar"/>
   </a>
 </details>
 
@@ -44,7 +44,7 @@ Passionate about infrastructure automation and cloud-native technologies.
 [![Google Cloud](https://img.shields.io/badge/Google_Cloud-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white)](https://cloud.google.com/)
 
 ### :computer: Operating Systems
-[![CentOS](https://img.shields.io/badge/CentOS-262577?style=for-the-badge&logo=CentOS&logoColor=white)](https://www.centos.org/)
+[![Rocky Linux](https://img.shields.io/badge/Rocky_Linux-10B981?style=for-the-badge&logo=rockylinux&logoColor=white)](https://rockylinux.org/)
 [![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=white)](https://www.linux.org/)
 [![Ubuntu](https://img.shields.io/badge/Ubuntu-E95420?style=for-the-badge&logo=ubuntu&logoColor=white)](https://ubuntu.com/)
 [![MacOS](https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white)](https://www.apple.com/macos/)

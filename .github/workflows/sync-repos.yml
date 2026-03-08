@@ -3,7 +3,8 @@ name: Sync GitHub Repos to GitLab and Gitee
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 03 */7 * *"
+    # Every 7 days at 03:00 UTC
+    - cron: "0 3 * * 0"
 
 jobs:
   get_repos:
@@ -13,56 +14,44 @@ jobs:
       actions: read
       repository-projects: read
     outputs:
-      repo_list: ${{ steps.set-output.outputs.repos }}
+      repo_list: ${{ steps.get-all-repos.outputs.repos }}
     steps:
       - name: Get all repositories
         id: get-all-repos
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GH_TOKEN }}
           script: |
-            try {
-              // Fetch repositories
+            const excludeRepo = context.repo.repo; // exclude this profile repo
+            const repos = [];
+            for (let page = 1; ; page++) {
               const { data } = await github.rest.repos.listForAuthenticatedUser({
                 per_page: 100,
+                page,
                 sort: 'updated',
-                direction: 'desc'
+                direction: 'desc',
               });
-
-              // Filter arvhived and fork repositories
-              const repos = data.filter(repo => !repo.archived && !repo.fork).map(repo => repo.name);
-              
-              // Convert the repositories array into a single-line JSON string
-              const repoJson = JSON.stringify(repos).replace(/\n/g, '');
-              console.log('Repo JSON:', repoJson);
-              
-              // Export to environment variables
-              core.exportVariable('REPO_LIST_JSON', repoJson);
-            } catch (error) {
-              core.setFailed('Failed to fetch repos: ' + error.message);
+              if (data.length === 0) break;
+              for (const repo of data) {
+                if (!repo.archived && !repo.fork && repo.name !== excludeRepo) {
+                  repos.push(repo.name);
+                }
+              }
+              if (data.length < 100) break;
             }
-          # result-encoding: json
-
-      - name: Set output using environment variable
-        id: set-output
-        run: |
-          echo "repos=${REPO_LIST_JSON}" >> $GITHUB_OUTPUT
-          echo "Repo list: ${REPO_LIST_JSON}"
-          if [ -z "${REPO_LIST_JSON}" ]; then
-            echo "Repo list is empty!"
-            exit 1
-          fi
+            const repoJson = JSON.stringify(repos);
+            core.setOutput('repos', repoJson);
 
   sync_repos:
     needs: get_repos
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         repo: ${{ fromJSON(needs.get_repos.outputs.repo_list) }}
     permissions:
       contents: read
       actions: read
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -72,7 +61,7 @@ jobs:
           token: ${{ secrets.GH_TOKEN }}
           fetch-depth: 0
 
-      - name: Configure Git Identity
+      - name: Configure Git identity
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
@@ -85,17 +74,27 @@ jobs:
           GITEE_REPO_OWNER: ${{ github.repository_owner }}
         run: |
           cd ${{ matrix.repo }}
-          git remote add gitlab https://${{ env.GITLAB_REPO_OWNER }}:$GITLAB_TOKEN@gitlab.com/${{ env.GITLAB_REPO_OWNER }}/${{ matrix.repo }}.git
-          git remote add gitee https://${{ env.GITEE_REPO_OWNER }}:$GITEE_TOKEN@gitee.com/${{ env.GITEE_REPO_OWNER }}/${{ matrix.repo }}.git
 
-          # Avoid pushing the same commit repeatedly.
-          git fetch gitlab main || true
-          git fetch gitee main || true
-          if ! git diff --quiet gitlab/main..main; then
-            # git push gitlab main --force-if-different
-            git push gitlab main --force
-          fi
-          if ! git diff --quiet gitee/main..main; then
-            # git push gitee main --force-if-different
-            git push gitee main --force
-          fi
+          BRANCH=$(git branch --show-current)
+          echo "Default branch: $BRANCH"
+
+          for remote in gitlab gitee; do
+            if [ "$remote" = "gitlab" ]; then
+              URL="https://${GITLAB_REPO_OWNER}:${GITLAB_TOKEN}@gitlab.com/${GITLAB_REPO_OWNER}/${{ matrix.repo }}.git"
+              HOST="gitlab.com"
+            else
+              URL="https://${GITEE_REPO_OWNER}:${GITEE_TOKEN}@gitee.com/${GITEE_REPO_OWNER}/${{ matrix.repo }}.git"
+              HOST="gitee.com"
+            fi
+
+            git remote remove $remote 2>/dev/null || true
+            git remote add $remote "$URL"
+
+            git fetch $remote $BRANCH 2>/dev/null || true
+            if ! git show-ref --verify --quiet refs/remotes/$remote/$BRANCH 2>/dev/null || \
+               ! git diff --quiet $remote/$BRANCH..$BRANCH; then
+              git push $remote $BRANCH --force
+            else
+              echo "No changes to push to $HOST."
+            fi
+          done
