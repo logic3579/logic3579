@@ -103,18 +103,9 @@ jobs:
             exit 1
           fi
 
-          cd repo.git
-          # Ensure all branches/tags exist on target before realigning default branch.
-          git push "$url" --all
-          git push "$url" --tags
-          # Realign default branch (idempotent); needed before mirror push can prune
-          # an outdated default branch on the target.
-          curl -sSf -X PUT \
-            -H "PRIVATE-TOKEN: $GITLAB_TOKEN" \
-            --data-urlencode "default_branch=$DEFAULT_BRANCH" \
-            "https://gitlab.com/api/v4/projects/${encoded}" > /dev/null
-          # Final mirror push prunes refs that no longer exist on source.
-          git push --mirror "$url"
+          # GitLab is lenient about HEAD/default-branch reassignment during mirror
+          # push, so a single mirror push suffices.
+          git -C repo.git push --mirror "$url"
 
       - name: Sync to Gitee
         if: always() && steps.sync_gitlab.conclusion != 'cancelled'
@@ -147,12 +138,19 @@ jobs:
             exit 1
           fi
 
-          cd repo.git
-          git push "$url" --all
-          git push "$url" --tags
+          # Push heads/tags first so the source's default branch exists on the target
+          # before we realign it — Gitee refuses to delete the current default branch
+          # during a mirror push.
+          git -C repo.git push "$url" --all
+          git -C repo.git push "$url" --tags
+          # PATCH requires `name`; enforce default_branch and visibility (Gitee's own
+          # account-level default is `private: true` regardless of the POST payload).
           curl -sSf -X PATCH \
             -H "Content-Type: application/json" \
-            -d "$(jq -n --arg t "$GITEE_TOKEN" --arg b "$DEFAULT_BRANCH" \
-                  '{access_token: $t, default_branch: $b}')" \
+            -d "$(jq -n \
+                  --arg t "$GITEE_TOKEN" --arg n "$REPO" \
+                  --arg b "$DEFAULT_BRANCH" --argjson p "$PRIVATE" \
+                  '{access_token: $t, name: $n, default_branch: $b, private: $p}')" \
             "https://gitee.com/api/v5/repos/${OWNER}/${REPO}" > /dev/null
-          git push --mirror "$url"
+          # Final mirror push prunes refs that no longer exist on source.
+          git -C repo.git push --mirror "$url"
