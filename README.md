@@ -15,22 +15,22 @@ _Kubernetes · CI/CD · Cloud._
 ## :bar_chart: GitHub Metrics
 
 <a href="https://github.com/lowlighter/metrics">
-  <img src="./metrics.classic.svg" alt="GitHub metrics (classic)"/>
+  <img src="https://raw.githubusercontent.com/logic3579/logic3579/output/metrics.classic.svg" alt="GitHub metrics (classic)"/>
 </a>
 
-<img src="./snake.svg" alt="Contribution snake" width="100%"/>
+<img src="https://raw.githubusercontent.com/logic3579/logic3579/output/snake.svg" alt="Contribution snake" width="100%"/>
 
 <details>
   <summary>Projects I created</summary>
-  <a href="https://github.com/logic3579?tab=repositories&q=&type=&language=&sort=stargazers">
-    <img src="./metrics.plugin.repositories.starred.svg" alt="Starred repositories"/>
+  <a href="https://github.com/logic3579?tab=repositories&type=source&sort=stargazers">
+    <img src="https://raw.githubusercontent.com/logic3579/logic3579/output/metrics.plugin.repositories.starred.svg" alt="Starred repositories"/>
   </a>
 </details>
 
 <details>
   <summary>:calendar: Commit calendar</summary>
   <a href="https://github.com/logic3579">
-    <img src="./metrics.plugin.calendar.full.svg" alt="Full commit calendar"/>
+    <img src="https://raw.githubusercontent.com/logic3579/logic3579/output/metrics.plugin.calendar.full.svg" alt="Full commit calendar"/>
   </a>
 </details>
 
@@ -87,5 +87,6 @@ _Kubernetes · CI/CD · Cloud._
 
 ## :gear: Automation
 
-[![Update Metrics](https://github.com/logic3579/logic3579/actions/workflows/metrics.yaml/badge.svg)](https://github.com/logic3579/logic3579/actions/workflows/metrics.yaml)
+[![Update Metrics](https://github.com/logic3579/logic3579/actions/workflows/metrics.yml/badge.svg)](https://github.com/logic3579/logic3579/actions/workflows/metrics.yml)
+[![Generate Snake](https://github.com/logic3579/logic3579/actions/workflows/snake.yml/badge.svg)](https://github.com/logic3579/logic3579/actions/workflows/snake.yml)
 [![Sync GitHub Repos to GitLab and Gitee](https://github.com/logic3579/logic3579/actions/workflows/sync-repos.yml/badge.svg)](https://github.com/logic3579/logic3579/actions/workflows/sync-repos.yml)

@@ -8,14 +8,24 @@ on:
   # (optional) Run workflow when pushing on master/main
   push: { branches: ["main", "master"] }
 
+permissions:
+  contents: write
+
+# Shared with snake.yml so they never race when both push to the `output` branch.
+concurrency:
+  group: output-branch
+  cancel-in-progress: false
+
 jobs:
   github-metrics:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Classic Metrics
         uses: lowlighter/metrics@latest
         with:
           filename: metrics.classic.svg
+          committer_branch: output
           token: ${{ secrets.GITHUB_TOKEN }}
           base: header, repositories
           plugin_lines: yes
@@ -23,6 +33,7 @@ jobs:
         uses: lowlighter/metrics@latest
         with:
           filename: metrics.plugin.repositories.starred.svg
+          committer_branch: output
           token: ${{ secrets.GITHUB_TOKEN }}
           base: ""
           plugin_repositories: yes
@@ -31,6 +42,7 @@ jobs:
         uses: lowlighter/metrics@latest
         with:
           filename: metrics.plugin.calendar.full.svg
+          committer_branch: output
           token: ${{ secrets.GITHUB_TOKEN }}
           base: ""
           plugin_calendar: yes

@@ -5,32 +5,58 @@ on:
     - cron: "0 4 * * *"
   workflow_dispatch:
 
+permissions:
+  contents: write
+
+# Shared with metrics.yml so they never race when both push to the `output` branch.
+concurrency:
+  group: output-branch
+  cancel-in-progress: false
+
 jobs:
   snake:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    timeout-minutes: 10
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Generate contribution snake
         uses: Platane/snk@v3
         with:
           github_user_name: ${{ github.repository_owner }}
           outputs: |
-            snake.svg
+            dist/snake.svg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Commit and push snake
+      - name: Publish to output branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add snake.svg
-          if git diff --staged --quiet; then
-            echo "No changes to snake.svg"
-          else
+
+          work=$(mktemp -d)
+          remote="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+
+          # If the output branch already exists, append on top of it so we don't
+          # wipe metrics SVGs. Otherwise create it as a fresh orphan branch.
+          if git ls-remote --exit-code --heads "$remote" output >/dev/null 2>&1; then
+            git clone --depth=1 --single-branch --branch=output "$remote" "$work"
+            cp dist/snake.svg "$work/snake.svg"
+            cd "$work"
+            git add snake.svg
+            if git diff --cached --quiet; then
+              echo "No changes to snake.svg"
+              exit 0
+            fi
             git commit -m "chore: update contribution snake"
-            git push
+            git push origin output
+          else
+            cd "$work"
+            git init -q -b output
+            git remote add origin "$remote"
+            cp "$GITHUB_WORKSPACE/dist/snake.svg" snake.svg
+            git add snake.svg
+            git commit -m "chore: seed output branch with snake.svg"
+            git push -u origin output
           fi

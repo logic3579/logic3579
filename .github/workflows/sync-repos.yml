@@ -35,7 +35,9 @@ jobs:
               .map(r => ({
                 name: r.name,
                 private: r.private,
-                description: (r.description || '').slice(0, 250),
+                // 100 chars keeps the matrix outputs well under the 1MB job-output cap
+                // even when the user has hundreds of repos.
+                description: (r.description || '').slice(0, 100),
                 default_branch: r.default_branch,
               }));
             core.setOutput('repos', JSON.stringify(repos));
@@ -49,6 +51,7 @@ jobs:
     needs: list_repos
     if: needs.list_repos.outputs.count != '0'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       max-parallel: 5
@@ -81,7 +84,7 @@ jobs:
           encoded="${OWNER}%2F${REPO}"
           url="https://oauth2:${GITLAB_TOKEN}@gitlab.com/${OWNER}/${REPO}.git"
 
-          status=$(curl -s -o /dev/null -w "%{http_code}" \
+          status=$(curl -s --retry 3 --retry-delay 5 -o /dev/null -w "%{http_code}" \
             -H "PRIVATE-TOKEN: $GITLAB_TOKEN" \
             "https://gitlab.com/api/v4/projects/${encoded}")
 
@@ -118,16 +121,16 @@ jobs:
         run: |
           url="https://${OWNER}:${GITEE_TOKEN}@gitee.com/${OWNER}/${REPO}.git"
 
-          status=$(curl -s -o /dev/null -w "%{http_code}" \
+          status=$(curl -s --retry 3 --retry-delay 5 -o /dev/null -w "%{http_code}" \
             -H "Authorization: token $GITEE_TOKEN" \
             "https://gitee.com/api/v5/repos/${OWNER}/${REPO}")
 
           if [ "$status" = "404" ]; then
             payload=$(jq -n \
-              --arg token "$GITEE_TOKEN" --arg name "$REPO" \
-              --arg desc "$DESC" --argjson private "$PRIVATE" \
-              '{access_token: $token, name: $name, description: $desc, private: $private}')
+              --arg name "$REPO" --arg desc "$DESC" --argjson private "$PRIVATE" \
+              '{name: $name, description: $desc, private: $private}')
             curl -sSf -X POST \
+              -H "Authorization: token $GITEE_TOKEN" \
               -H "Content-Type: application/json" \
               -d "$payload" \
               "https://gitee.com/api/v5/user/repos" > /dev/null
@@ -145,11 +148,11 @@ jobs:
           # PATCH requires `name`; enforce default_branch and visibility (Gitee's own
           # account-level default is `private: true` regardless of the POST payload).
           curl -sSf -X PATCH \
+            -H "Authorization: token $GITEE_TOKEN" \
             -H "Content-Type: application/json" \
             -d "$(jq -n \
-                  --arg t "$GITEE_TOKEN" --arg n "$REPO" \
-                  --arg b "$DEFAULT_BRANCH" --argjson p "$PRIVATE" \
-                  '{access_token: $t, name: $n, default_branch: $b, private: $p}')" \
+                  --arg n "$REPO" --arg b "$DEFAULT_BRANCH" --argjson p "$PRIVATE" \
+                  '{name: $n, default_branch: $b, private: $p}')" \
             "https://gitee.com/api/v5/repos/${OWNER}/${REPO}" > /dev/null
           # Final mirror push prunes refs that no longer exist on source.
           git -C repo.git push --mirror "$url"
