@@ -22,7 +22,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Classic Metrics
-        uses: lowlighter/metrics@latest
+        uses: lowlighter/metrics@v3.34
         with:
           filename: metrics.classic.svg
           committer_branch: output
@@ -30,7 +30,7 @@ jobs:
           base: header, repositories
           plugin_lines: yes
       - name: Starred repositories
-        uses: lowlighter/metrics@latest
+        uses: lowlighter/metrics@v3.34
         with:
           filename: metrics.plugin.repositories.starred.svg
           committer_branch: output
@@ -39,7 +39,7 @@ jobs:
           plugin_repositories: yes
           plugin_repositories_starred: 10
       - name: Full history calendar
-        uses: lowlighter/metrics@latest
+        uses: lowlighter/metrics@v3.34
         with:
           filename: metrics.plugin.calendar.full.svg
           committer_branch: output
