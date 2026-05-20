@@ -30,9 +30,8 @@ jobs:
               github.rest.repos.listForAuthenticatedUser,
               { per_page: 100, affiliation: 'owner', sort: 'full_name' }
             );
-            const self = context.repo.repo;
             const repos = all
-              .filter(r => !r.fork && !r.archived && r.name !== self)
+              .filter(r => !r.fork && !r.archived)
               .map(r => ({
                 name: r.name,
                 private: r.private,
