@@ -3,98 +3,142 @@ name: Sync GitHub Repos to GitLab and Gitee
 on:
   workflow_dispatch:
   schedule:
-    # Every 7 days at 03:00 UTC
+    # Every Sunday at 03:00 UTC
     - cron: "0 3 * * 0"
 
+concurrency:
+  group: sync-repos
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
 jobs:
-  get_repos:
+  list_repos:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      actions: read
-      repository-projects: read
     outputs:
-      repo_list: ${{ steps.get-all-repos.outputs.repos }}
+      repos: ${{ steps.list.outputs.repos }}
+      count: ${{ steps.list.outputs.count }}
     steps:
-      - name: Get all repositories
-        id: get-all-repos
+      - name: List owned repositories
+        id: list
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GH_TOKEN }}
           script: |
-            const excludeRepo = context.repo.repo; // exclude this profile repo
-            const repos = [];
-            for (let page = 1; ; page++) {
-              const { data } = await github.rest.repos.listForAuthenticatedUser({
-                per_page: 100,
-                page,
-                sort: 'updated',
-                direction: 'desc',
-              });
-              if (data.length === 0) break;
-              for (const repo of data) {
-                if (!repo.archived && !repo.fork && repo.name !== excludeRepo) {
-                  repos.push(repo.name);
-                }
-              }
-              if (data.length < 100) break;
-            }
-            const repoJson = JSON.stringify(repos);
-            core.setOutput('repos', repoJson);
+            const all = await github.paginate(
+              github.rest.repos.listForAuthenticatedUser,
+              { per_page: 100, affiliation: 'owner', sort: 'full_name' }
+            );
+            const self = context.repo.repo;
+            const repos = all
+              .filter(r => !r.fork && !r.archived && r.name !== self)
+              .map(r => ({
+                name: r.name,
+                private: r.private,
+                description: (r.description || '').slice(0, 250),
+              }));
+            core.setOutput('repos', JSON.stringify(repos));
+            core.setOutput('count', String(repos.length));
+            await core.summary
+              .addHeading(`Syncing ${repos.length} repositories`)
+              .addList(repos.map(r => `${r.name}${r.private ? ' (private)' : ''}`))
+              .write();
 
-  sync_repos:
-    needs: get_repos
+  sync:
+    needs: list_repos
+    if: needs.list_repos.outputs.count != '0'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      max-parallel: 5
       matrix:
-        repo: ${{ fromJSON(needs.get_repos.outputs.repo_list) }}
-    permissions:
-      contents: read
-      actions: read
+        repo: ${{ fromJSON(needs.list_repos.outputs.repos) }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ github.repository_owner }}/${{ matrix.repo }}
-          path: ${{ matrix.repo }}
-          token: ${{ secrets.GH_TOKEN }}
-          fetch-depth: 0
-
-      - name: Configure Git identity
+      - name: Mirror clone from GitHub
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ matrix.repo.name }}
         run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
+          git clone --mirror \
+            "https://x-access-token:${GH_TOKEN}@github.com/${OWNER}/${REPO}.git" \
+            repo.git
 
-      - name: Sync to GitLab and Gitee
+      - name: Ensure GitLab project exists
         env:
           GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
-          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
-          GITLAB_REPO_OWNER: ${{ github.repository_owner }}
-          GITEE_REPO_OWNER: ${{ github.repository_owner }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ matrix.repo.name }}
+          DESC: ${{ matrix.repo.description }}
+          PRIVATE: ${{ matrix.repo.private }}
         run: |
-          cd ${{ matrix.repo }}
+          encoded="${OWNER}%2F${REPO}"
+          status=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+            "https://gitlab.com/api/v4/projects/${encoded}")
 
-          BRANCH=$(git branch --show-current)
-          echo "Default branch: $BRANCH"
+          if [ "$status" = "404" ]; then
+            visibility=$([ "$PRIVATE" = "true" ] && echo private || echo public)
+            payload=$(jq -n \
+              --arg name "$REPO" --arg desc "$DESC" --arg vis "$visibility" \
+              '{name: $name, description: $desc, visibility: $vis}')
+            curl -sSf -X POST \
+              -H "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "$payload" \
+              "https://gitlab.com/api/v4/projects" > /dev/null
+            echo "Created GitLab project ${OWNER}/${REPO}"
+          elif [ "$status" != "200" ]; then
+            echo "::error::GitLab API returned $status for ${REPO}"
+            exit 1
+          fi
 
-          for remote in gitlab gitee; do
-            if [ "$remote" = "gitlab" ]; then
-              URL="https://${GITLAB_REPO_OWNER}:${GITLAB_TOKEN}@gitlab.com/${GITLAB_REPO_OWNER}/${{ matrix.repo }}.git"
-              HOST="gitlab.com"
-            else
-              URL="https://${GITEE_REPO_OWNER}:${GITEE_TOKEN}@gitee.com/${GITEE_REPO_OWNER}/${{ matrix.repo }}.git"
-              HOST="gitee.com"
-            fi
+      - name: Ensure Gitee repository exists
+        env:
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ matrix.repo.name }}
+          DESC: ${{ matrix.repo.description }}
+          PRIVATE: ${{ matrix.repo.private }}
+        run: |
+          status=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: token $GITEE_TOKEN" \
+            "https://gitee.com/api/v5/repos/${OWNER}/${REPO}")
 
-            git remote remove $remote 2>/dev/null || true
-            git remote add $remote "$URL"
+          if [ "$status" = "404" ]; then
+            payload=$(jq -n \
+              --arg token "$GITEE_TOKEN" --arg name "$REPO" \
+              --arg desc "$DESC" --argjson private "$PRIVATE" \
+              '{access_token: $token, name: $name, description: $desc, private: $private}')
+            curl -sSf -X POST \
+              -H "Content-Type: application/json" \
+              -d "$payload" \
+              "https://gitee.com/api/v5/user/repos" > /dev/null
+            echo "Created Gitee repo ${OWNER}/${REPO}"
+          elif [ "$status" != "200" ]; then
+            echo "::error::Gitee API returned $status for ${REPO}"
+            exit 1
+          fi
 
-            git fetch $remote $BRANCH 2>/dev/null || true
-            if ! git show-ref --verify --quiet refs/remotes/$remote/$BRANCH 2>/dev/null || \
-               ! git diff --quiet $remote/$BRANCH..$BRANCH; then
-              git push $remote $BRANCH --force
-            else
-              echo "No changes to push to $HOST."
-            fi
-          done
+      - name: Push mirror to GitLab
+        id: push_gitlab
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ matrix.repo.name }}
+        run: |
+          cd repo.git
+          git push --mirror \
+            "https://oauth2:${GITLAB_TOKEN}@gitlab.com/${OWNER}/${REPO}.git"
+
+      - name: Push mirror to Gitee
+        if: always() && steps.push_gitlab.conclusion != 'cancelled'
+        env:
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ matrix.repo.name }}
+        run: |
+          cd repo.git
+          git push --mirror \
+            "https://${OWNER}:${GITEE_TOKEN}@gitee.com/${OWNER}/${REPO}.git"
