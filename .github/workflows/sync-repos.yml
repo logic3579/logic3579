@@ -37,6 +37,7 @@ jobs:
                 name: r.name,
                 private: r.private,
                 description: (r.description || '').slice(0, 250),
+                default_branch: r.default_branch,
               }));
             core.setOutput('repos', JSON.stringify(repos));
             core.setOutput('count', String(repos.length));
@@ -64,16 +65,23 @@ jobs:
           git clone --mirror \
             "https://x-access-token:${GH_TOKEN}@github.com/${OWNER}/${REPO}.git" \
             repo.git
+          # refs/pull/* are GitHub-only PR refs that Gitee rejects as hidden refs.
+          git -C repo.git for-each-ref --format='delete %(refname)' refs/pull \
+            | git -C repo.git update-ref --stdin
 
-      - name: Ensure GitLab project exists
+      - name: Sync to GitLab
+        id: sync_gitlab
         env:
           GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
           OWNER: ${{ github.repository_owner }}
           REPO: ${{ matrix.repo.name }}
           DESC: ${{ matrix.repo.description }}
           PRIVATE: ${{ matrix.repo.private }}
+          DEFAULT_BRANCH: ${{ matrix.repo.default_branch }}
         run: |
           encoded="${OWNER}%2F${REPO}"
+          url="https://oauth2:${GITLAB_TOKEN}@gitlab.com/${OWNER}/${REPO}.git"
+
           status=$(curl -s -o /dev/null -w "%{http_code}" \
             -H "PRIVATE-TOKEN: $GITLAB_TOKEN" \
             "https://gitlab.com/api/v4/projects/${encoded}")
@@ -81,8 +89,9 @@ jobs:
           if [ "$status" = "404" ]; then
             visibility=$([ "$PRIVATE" = "true" ] && echo private || echo public)
             payload=$(jq -n \
-              --arg name "$REPO" --arg desc "$DESC" --arg vis "$visibility" \
-              '{name: $name, description: $desc, visibility: $vis}')
+              --arg name "$REPO" --arg desc "$DESC" \
+              --arg vis "$visibility" --arg branch "$DEFAULT_BRANCH" \
+              '{name: $name, description: $desc, visibility: $vis, default_branch: $branch}')
             curl -sSf -X POST \
               -H "PRIVATE-TOKEN: $GITLAB_TOKEN" \
               -H "Content-Type: application/json" \
@@ -94,14 +103,31 @@ jobs:
             exit 1
           fi
 
-      - name: Ensure Gitee repository exists
+          cd repo.git
+          # Ensure all branches/tags exist on target before realigning default branch.
+          git push "$url" --all
+          git push "$url" --tags
+          # Realign default branch (idempotent); needed before mirror push can prune
+          # an outdated default branch on the target.
+          curl -sSf -X PUT \
+            -H "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+            --data-urlencode "default_branch=$DEFAULT_BRANCH" \
+            "https://gitlab.com/api/v4/projects/${encoded}" > /dev/null
+          # Final mirror push prunes refs that no longer exist on source.
+          git push --mirror "$url"
+
+      - name: Sync to Gitee
+        if: always() && steps.sync_gitlab.conclusion != 'cancelled'
         env:
           GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
           OWNER: ${{ github.repository_owner }}
           REPO: ${{ matrix.repo.name }}
           DESC: ${{ matrix.repo.description }}
           PRIVATE: ${{ matrix.repo.private }}
+          DEFAULT_BRANCH: ${{ matrix.repo.default_branch }}
         run: |
+          url="https://${OWNER}:${GITEE_TOKEN}@gitee.com/${OWNER}/${REPO}.git"
+
           status=$(curl -s -o /dev/null -w "%{http_code}" \
             -H "Authorization: token $GITEE_TOKEN" \
             "https://gitee.com/api/v5/repos/${OWNER}/${REPO}")
@@ -121,24 +147,12 @@ jobs:
             exit 1
           fi
 
-      - name: Push mirror to GitLab
-        id: push_gitlab
-        env:
-          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
-          OWNER: ${{ github.repository_owner }}
-          REPO: ${{ matrix.repo.name }}
-        run: |
           cd repo.git
-          git push --mirror \
-            "https://oauth2:${GITLAB_TOKEN}@gitlab.com/${OWNER}/${REPO}.git"
-
-      - name: Push mirror to Gitee
-        if: always() && steps.push_gitlab.conclusion != 'cancelled'
-        env:
-          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
-          OWNER: ${{ github.repository_owner }}
-          REPO: ${{ matrix.repo.name }}
-        run: |
-          cd repo.git
-          git push --mirror \
-            "https://${OWNER}:${GITEE_TOKEN}@gitee.com/${OWNER}/${REPO}.git"
+          git push "$url" --all
+          git push "$url" --tags
+          curl -sSf -X PATCH \
+            -H "Content-Type: application/json" \
+            -d "$(jq -n --arg t "$GITEE_TOKEN" --arg b "$DEFAULT_BRANCH" \
+                  '{access_token: $t, default_branch: $b}')" \
+            "https://gitee.com/api/v5/repos/${OWNER}/${REPO}" > /dev/null
+          git push --mirror "$url"
