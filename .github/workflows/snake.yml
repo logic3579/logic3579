@@ -19,11 +19,13 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Generate contribution snake
-        uses: Platane/snk@v3
+        # Platane/snk@v3
+        uses: Platane/snk@d8f6715049803e982ee5ff501b6b9b7d5deeb09b
         with:
           github_user_name: ${{ github.repository_owner }}
           outputs: |
-            dist/snake.svg
+            dist/snake.svg?palette=github-light
+            dist/snake-dark.svg?palette=github-dark
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -52,10 +54,11 @@ jobs:
           if git_gh ls-remote --exit-code --heads "$remote" output >/dev/null 2>&1; then
             git_gh clone --depth=1 --single-branch --branch=output "$remote" "$work"
             cp dist/snake.svg "$work/snake.svg"
+            cp dist/snake-dark.svg "$work/snake-dark.svg"
             cd "$work"
-            git add snake.svg
+            git add snake.svg snake-dark.svg
             if git diff --cached --quiet; then
-              echo "No changes to snake.svg"
+              echo "No changes to snake SVGs"
               exit 0
             fi
             git commit -m "chore: update contribution snake"
@@ -65,7 +68,8 @@ jobs:
             git init -q -b output
             git remote add origin "$remote"
             cp "$GITHUB_WORKSPACE/dist/snake.svg" snake.svg
-            git add snake.svg
-            git commit -m "chore: seed output branch with snake.svg"
+            cp "$GITHUB_WORKSPACE/dist/snake-dark.svg" snake-dark.svg
+            git add snake.svg snake-dark.svg
+            git commit -m "chore: seed output branch with snake SVGs"
             git_gh push -u origin output
           fi

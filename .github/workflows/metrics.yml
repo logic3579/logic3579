@@ -1,12 +1,8 @@
 name: Update Metrics
 
 on:
-  # Schedule daily updates
   schedule: [{ cron: "33 3 * * *" }]
-  # (optional) Run workflow manually
   workflow_dispatch:
-  # (optional) Run workflow when pushing on master/main
-  push: { branches: ["main", "master"] }
 
 permissions:
   contents: write
@@ -22,28 +18,91 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Classic Metrics
-        uses: lowlighter/metrics@v4
+        # lowlighter/metrics@v4 (branch tip; no v4 release tag yet)
+        uses: lowlighter/metrics@05b761ce7066e3c897047ecd2431b93af4a5b02b
         with:
           filename: metrics.classic.svg
-          committer_branch: output
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_TOKEN }}
+          output_action: none
           base: header, repositories
           plugin_lines: yes
-      - name: Starred repositories
-        uses: lowlighter/metrics@v4
+
+      - name: Owned repositories
+        uses: lowlighter/metrics@05b761ce7066e3c897047ecd2431b93af4a5b02b
         with:
-          filename: metrics.plugin.repositories.starred.svg
-          committer_branch: output
-          token: ${{ secrets.GITHUB_TOKEN }}
+          filename: metrics.plugin.repositories.owned.svg
+          token: ${{ secrets.GH_TOKEN }}
+          output_action: none
           base: ""
           plugin_repositories: yes
+          plugin_repositories_affiliations: owner
           plugin_repositories_starred: 10
+
       - name: Full history calendar
-        uses: lowlighter/metrics@v4
+        uses: lowlighter/metrics@05b761ce7066e3c897047ecd2431b93af4a5b02b
         with:
           filename: metrics.plugin.calendar.full.svg
-          committer_branch: output
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_TOKEN }}
+          output_action: none
           base: ""
           plugin_calendar: yes
           plugin_calendar_limit: 0
+
+      - name: Publish metrics to output branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          auth_header() {
+            printf 'AUTHORIZATION: basic %s' "$(printf '%s:%s' "$1" "$2" | base64 | tr -d '\n')"
+          }
+          github_auth="$(auth_header x-access-token "$GITHUB_TOKEN")"
+          git_gh() {
+            git -c "http.https://github.com/.extraheader=${github_auth}" "$@"
+          }
+
+          renders=/metrics_renders
+          for f in metrics.classic.svg \
+                   metrics.plugin.repositories.owned.svg \
+                   metrics.plugin.calendar.full.svg; do
+            if [ ! -f "$renders/$f" ]; then
+              echo "::error::Missing render $renders/$f"
+              ls -la "$renders" || true
+              exit 1
+            fi
+          done
+
+          work=$(mktemp -d)
+          remote="https://github.com/${GITHUB_REPOSITORY}.git"
+
+          if git_gh ls-remote --exit-code --heads "$remote" output >/dev/null 2>&1; then
+            git_gh clone --depth=1 --single-branch --branch=output "$remote" "$work"
+          else
+            mkdir -p "$work"
+            cd "$work"
+            git init -q -b output
+            git remote add origin "$remote"
+            cd "$GITHUB_WORKSPACE"
+          fi
+
+          cp "$renders/metrics.classic.svg" "$work/"
+          cp "$renders/metrics.plugin.repositories.owned.svg" "$work/"
+          cp "$renders/metrics.plugin.calendar.full.svg" "$work/"
+          cd "$work"
+          git add metrics.classic.svg \
+                  metrics.plugin.repositories.owned.svg \
+                  metrics.plugin.calendar.full.svg
+          # Drop the old starred filename if it still exists on output.
+          if [ -f metrics.plugin.repositories.starred.svg ]; then
+            git rm -f metrics.plugin.repositories.starred.svg
+          fi
+
+          if git diff --cached --quiet; then
+            echo "No metrics changes to publish"
+            exit 0
+          fi
+          git commit -m "chore: update github metrics"
+          git_gh push -u origin HEAD:output
