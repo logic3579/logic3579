@@ -29,6 +29,9 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
         env:
           SYNC_ORGS: ${{ env.SYNC_ORGS }}
+          # Workflow token is not a fine-grained PAT, so org max-lifetime
+          # PAT policies (e.g. 366 days) cannot 403 public org listing.
+          ORG_LIST_TOKEN: ${{ github.token }}
         with:
           github-token: ${{ secrets.GH_TOKEN }}
           script: |
@@ -41,6 +44,35 @@ jobs:
               description: (r.description || '').slice(0, 100),
               default_branch: r.default_branch,
             });
+            const listPublicOrgRepos = async (org) => {
+              const token = process.env.ORG_LIST_TOKEN;
+              const headers = {
+                Accept: 'application/vnd.github+json',
+                'User-Agent': 'logic3579-sync-repos',
+                'X-GitHub-Api-Version': '2022-11-28',
+              };
+              if (token) {
+                headers.Authorization = `Bearer ${token}`;
+              }
+              const out = [];
+              let page = 1;
+              for (;;) {
+                const url = `https://api.github.com/orgs/${encodeURIComponent(org)}/repos?per_page=100&type=public&page=${page}`;
+                const res = await fetch(url, { headers });
+                if (!res.ok) {
+                  throw new Error(
+                    `List public repos for ${org} failed: ${res.status} ${await res.text()}`
+                  );
+                }
+                const batch = await res.json();
+                out.push(...batch);
+                if (!Array.isArray(batch) || batch.length < 100) {
+                  break;
+                }
+                page += 1;
+              }
+              return out;
+            };
             const personal = (
               await github.paginate(
                 github.rest.repos.listForAuthenticatedUser,
@@ -55,10 +87,7 @@ jobs:
               .split(/[\s,]+/)
               .filter(Boolean);
             for (const org of orgs) {
-              const listed = await github.paginate(
-                github.rest.repos.listForOrg,
-                { org, per_page: 100, type: 'public' }
-              );
+              const listed = await listPublicOrgRepos(org);
               orgRepos.push(
                 ...listed
                   .filter((r) => !r.fork && !r.archived && !r.private)
@@ -99,7 +128,9 @@ jobs:
 
       - name: Mirror clone from GitHub
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          # Long-lived fine-grained PATs are rejected by org lifetime policy;
+          # public org repos clone anonymously.
+          GH_TOKEN: ${{ matrix.repo.owner == github.repository_owner && secrets.GH_TOKEN || '' }}
           OWNER: ${{ matrix.repo.owner }}
           REPO: ${{ matrix.repo.name }}
         run: bash .github/scripts/mirror-clone-github.sh

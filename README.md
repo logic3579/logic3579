@@ -104,7 +104,7 @@ _Kubernetes · GitOps · Multi-cloud · AIOps._
 
 | Secret | Used by | Minimum access |
 |--------|---------|----------------|
-| `GH_TOKEN` | Sync | Fine-grained or classic PAT: list/clone owned repos. Fine-grained tokens also have read-only access to public repos, including allowlisted orgs (`SYNC_ORGS`, currently `ArkGravity`). |
+| `GH_TOKEN` | Sync | Fine-grained or classic PAT: list/clone **owned** (personal) repos. Org public repos in `SYNC_ORGS` are listed with `GITHUB_TOKEN` and cloned without this PAT, because org policies can reject fine-grained PATs whose lifetime exceeds 366 days. |
 | `METRICS_TOKEN` | Metrics (optional) | **Classic** PAT only (`repo` scope). Metrics uses GitHub GraphQL, which rejects fine-grained tokens. If unset, falls back to `GITHUB_TOKEN` (current-repo stats only). |
 | `GITLAB_TOKEN` | Sync | `api` scope (create/update projects + git push). Personal GitLab username should match the GitHub login. Org repos are created under the matching GitLab group (already created). |
 | `GITEE_TOKEN` | Sync | Private token with repo create/push. Personal Gitee username should match the GitHub login. Org repos are created under the matching Gitee org (already created). |
