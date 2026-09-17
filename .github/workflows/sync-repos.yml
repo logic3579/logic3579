@@ -22,7 +22,8 @@ jobs:
     steps:
       - name: List owned repositories
         id: list
-        uses: actions/github-script@v9
+        # actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
         with:
           github-token: ${{ secrets.GH_TOKEN }}
           script: |
@@ -58,23 +59,19 @@ jobs:
       matrix:
         repo: ${{ fromJSON(needs.list_repos.outputs.repos) }}
     steps:
+      - name: Checkout sync scripts
+        # actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          sparse-checkout: |
+            .github/scripts
+
       - name: Mirror clone from GitHub
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           OWNER: ${{ github.repository_owner }}
           REPO: ${{ matrix.repo.name }}
-        run: |
-          set -euo pipefail
-          # Basic auth via header — token never appears in the remote URL
-          # (avoids leaks in git error messages / process listings).
-          auth_header() {
-            printf 'AUTHORIZATION: basic %s' "$(printf '%s:%s' "$1" "$2" | base64 | tr -d '\n')"
-          }
-          git -c "http.https://github.com/.extraheader=$(auth_header x-access-token "$GH_TOKEN")" \
-            clone --mirror "https://github.com/${OWNER}/${REPO}.git" repo.git
-          # refs/pull/* are GitHub-only PR refs that Gitee rejects as hidden refs.
-          git -C repo.git for-each-ref --format='delete %(refname)' refs/pull \
-            | git -C repo.git update-ref --stdin
+        run: bash .github/scripts/mirror-clone-github.sh
 
       - name: Sync to GitLab
         id: sync_gitlab
@@ -85,40 +82,7 @@ jobs:
           DESC: ${{ matrix.repo.description }}
           PRIVATE: ${{ matrix.repo.private }}
           DEFAULT_BRANCH: ${{ matrix.repo.default_branch }}
-        run: |
-          set -euo pipefail
-          auth_header() {
-            printf 'AUTHORIZATION: basic %s' "$(printf '%s:%s' "$1" "$2" | base64 | tr -d '\n')"
-          }
-          encoded="${OWNER}%2F${REPO}"
-          url="https://gitlab.com/${OWNER}/${REPO}.git"
-          gitlab_auth="$(auth_header oauth2 "$GITLAB_TOKEN")"
-
-          status=$(curl -s --retry 3 --retry-delay 5 -o /dev/null -w "%{http_code}" \
-            -H "PRIVATE-TOKEN: $GITLAB_TOKEN" \
-            "https://gitlab.com/api/v4/projects/${encoded}")
-
-          if [ "$status" = "404" ]; then
-            visibility=$([ "$PRIVATE" = "true" ] && echo private || echo public)
-            payload=$(jq -n \
-              --arg name "$REPO" --arg desc "$DESC" \
-              --arg vis "$visibility" --arg branch "$DEFAULT_BRANCH" \
-              '{name: $name, description: $desc, visibility: $vis, default_branch: $branch}')
-            curl -sSf -X POST \
-              -H "PRIVATE-TOKEN: $GITLAB_TOKEN" \
-              -H "Content-Type: application/json" \
-              -d "$payload" \
-              "https://gitlab.com/api/v4/projects" > /dev/null
-            echo "Created GitLab project ${OWNER}/${REPO}"
-          elif [ "$status" != "200" ]; then
-            echo "::error::GitLab API returned $status for ${REPO}"
-            exit 1
-          fi
-
-          # GitLab is lenient about HEAD/default-branch reassignment during mirror
-          # push, so a single mirror push suffices.
-          git -C repo.git -c "http.https://gitlab.com/.extraheader=${gitlab_auth}" \
-            push --mirror "$url"
+        run: bash .github/scripts/sync-gitlab.sh
 
       - name: Sync to Gitee
         if: always() && steps.sync_gitlab.conclusion != 'cancelled'
@@ -129,62 +93,4 @@ jobs:
           DESC: ${{ matrix.repo.description }}
           PRIVATE: ${{ matrix.repo.private }}
           DEFAULT_BRANCH: ${{ matrix.repo.default_branch }}
-        run: |
-          set -euo pipefail
-          url="https://gitee.com/${OWNER}/${REPO}.git"
-
-          # Gitee's git HTTP ignores Authorization extraheaders and falls back to
-          # an interactive username prompt. GIT_ASKPASS keeps the token out of the
-          # remote URL and out of argv (reads from env instead).
-          askpass="$(mktemp)"
-          trap 'rm -f "$askpass"' EXIT
-          printf '%s\n' \
-            '#!/bin/sh' \
-            'case "$1" in' \
-            '  *Username*) printf "%s\n" "$GITEE_GIT_USER" ;;' \
-            '  *Password*) printf "%s\n" "$GITEE_TOKEN" ;;' \
-            'esac' >"$askpass"
-          chmod 700 "$askpass"
-          export GITEE_GIT_USER="$OWNER"
-          export GIT_ASKPASS="$askpass"
-          export GIT_TERMINAL_PROMPT=0
-          git_gitee() {
-            # Clear any inherited credential helpers so ASKPASS is used.
-            git -C repo.git -c credential.helper= "$@"
-          }
-
-          status=$(curl -s --retry 3 --retry-delay 5 -o /dev/null -w "%{http_code}" \
-            -H "Authorization: token $GITEE_TOKEN" \
-            "https://gitee.com/api/v5/repos/${OWNER}/${REPO}")
-
-          if [ "$status" = "404" ]; then
-            payload=$(jq -n \
-              --arg name "$REPO" --arg desc "$DESC" --argjson private "$PRIVATE" \
-              '{name: $name, description: $desc, private: $private}')
-            curl -sSf -X POST \
-              -H "Authorization: token $GITEE_TOKEN" \
-              -H "Content-Type: application/json" \
-              -d "$payload" \
-              "https://gitee.com/api/v5/user/repos" > /dev/null
-            echo "Created Gitee repo ${OWNER}/${REPO}"
-          elif [ "$status" != "200" ]; then
-            echo "::error::Gitee API returned $status for ${REPO}"
-            exit 1
-          fi
-
-          # Push heads/tags first so the source's default branch exists on the target
-          # before we realign it — Gitee refuses to delete the current default branch
-          # during a mirror push.
-          git_gitee push "$url" --all
-          git_gitee push "$url" --tags
-          # PATCH requires `name`; enforce default_branch and visibility (Gitee's own
-          # account-level default is `private: true` regardless of the POST payload).
-          curl -sSf -X PATCH \
-            -H "Authorization: token $GITEE_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d "$(jq -n \
-                  --arg n "$REPO" --arg b "$DEFAULT_BRANCH" --argjson p "$PRIVATE" \
-                  '{name: $n, default_branch: $b, private: $p}')" \
-            "https://gitee.com/api/v5/repos/${OWNER}/${REPO}" > /dev/null
-          # Final mirror push prunes refs that no longer exist on source.
-          git_gitee push --mirror "$url"
+        run: bash .github/scripts/sync-gitee.sh
