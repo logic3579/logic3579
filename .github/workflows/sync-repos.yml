@@ -131,11 +131,27 @@ jobs:
           DEFAULT_BRANCH: ${{ matrix.repo.default_branch }}
         run: |
           set -euo pipefail
-          auth_header() {
-            printf 'AUTHORIZATION: basic %s' "$(printf '%s:%s' "$1" "$2" | base64 | tr -d '\n')"
-          }
           url="https://gitee.com/${OWNER}/${REPO}.git"
-          gitee_auth="$(auth_header "$OWNER" "$GITEE_TOKEN")"
+
+          # Gitee's git HTTP ignores Authorization extraheaders and falls back to
+          # an interactive username prompt. GIT_ASKPASS keeps the token out of the
+          # remote URL and out of argv (reads from env instead).
+          askpass="$(mktemp)"
+          trap 'rm -f "$askpass"' EXIT
+          printf '%s\n' \
+            '#!/bin/sh' \
+            'case "$1" in' \
+            '  *Username*) printf "%s\n" "$GITEE_GIT_USER" ;;' \
+            '  *Password*) printf "%s\n" "$GITEE_TOKEN" ;;' \
+            'esac' >"$askpass"
+          chmod 700 "$askpass"
+          export GITEE_GIT_USER="$OWNER"
+          export GIT_ASKPASS="$askpass"
+          export GIT_TERMINAL_PROMPT=0
+          git_gitee() {
+            # Clear any inherited credential helpers so ASKPASS is used.
+            git -C repo.git -c credential.helper= "$@"
+          }
 
           status=$(curl -s --retry 3 --retry-delay 5 -o /dev/null -w "%{http_code}" \
             -H "Authorization: token $GITEE_TOKEN" \
@@ -159,10 +175,8 @@ jobs:
           # Push heads/tags first so the source's default branch exists on the target
           # before we realign it — Gitee refuses to delete the current default branch
           # during a mirror push.
-          git -C repo.git -c "http.https://gitee.com/.extraheader=${gitee_auth}" \
-            push "$url" --all
-          git -C repo.git -c "http.https://gitee.com/.extraheader=${gitee_auth}" \
-            push "$url" --tags
+          git_gitee push "$url" --all
+          git_gitee push "$url" --tags
           # PATCH requires `name`; enforce default_branch and visibility (Gitee's own
           # account-level default is `private: true` regardless of the POST payload).
           curl -sSf -X PATCH \
@@ -173,5 +187,4 @@ jobs:
                   '{name: $n, default_branch: $b, private: $p}')" \
             "https://gitee.com/api/v5/repos/${OWNER}/${REPO}" > /dev/null
           # Final mirror push prunes refs that no longer exist on source.
-          git -C repo.git -c "http.https://gitee.com/.extraheader=${gitee_auth}" \
-            push --mirror "$url"
+          git_gitee push --mirror "$url"
