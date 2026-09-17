@@ -65,7 +65,7 @@ _Kubernetes · GitOps · Multi-cloud · AIOps._
 [![Alibaba Cloud](https://img.shields.io/badge/Alibaba_Cloud-FF6A00?style=for-the-badge&logo=alibabacloud&logoColor=white)](https://www.aliyun.com/)
 
 <details>
-  <summary>More tools & middleware</summary>
+  <summary>More tools</summary>
 
 ### IaC & CI/CD
 
@@ -83,10 +83,12 @@ _Kubernetes · GitOps · Multi-cloud · AIOps._
 [![Kafka](https://img.shields.io/badge/Apache_Kafka-231F20?style=for-the-badge&logo=apache-kafka&logoColor=white)](https://kafka.apache.org/)
 [![Nginx](https://img.shields.io/badge/nginx-%23009639?style=for-the-badge&logo=nginx&logoColor=white)](https://www.nginx.com/)
 
-### Other clouds & OS
+### OS
 
-[![Tencent Cloud](https://img.shields.io/badge/Tencent%20Cloud-00A4FF?style=for-the-badge&logo=tencentqq&logoColor=white)](https://cloud.tencent.com/)
-[![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=white)](https://www.linux.org/)
+[![Rocky Linux](https://img.shields.io/badge/Rocky_Linux-10B981?style=for-the-badge&logo=rockylinux&logoColor=white)](https://rockylinux.org/)
+[![Ubuntu](https://img.shields.io/badge/Ubuntu-E95420?style=for-the-badge&logo=ubuntu&logoColor=white)](https://ubuntu.com/)
+[![Debian](https://img.shields.io/badge/Debian-A81D33?style=for-the-badge&logo=debian&logoColor=white)](https://www.debian.org/)
+[![macOS](https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white)](https://www.apple.com/macos/)
 
 </details>
 
