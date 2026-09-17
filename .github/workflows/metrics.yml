@@ -18,8 +18,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Classic Metrics
-        # lowlighter/metrics@v4 (branch tip; no v4 release tag yet)
-        uses: lowlighter/metrics@05b761ce7066e3c897047ecd2431b93af4a5b02b
+        # lowlighter/metrics@v3.34 (v4 branch tip has no action.yml)
+        uses: lowlighter/metrics@65836723097537a54cd8eb90f61839426b4266b6
         with:
           filename: metrics.classic.svg
           token: ${{ secrets.GH_TOKEN }}
@@ -28,7 +28,7 @@ jobs:
           plugin_lines: yes
 
       - name: Owned repositories
-        uses: lowlighter/metrics@05b761ce7066e3c897047ecd2431b93af4a5b02b
+        uses: lowlighter/metrics@65836723097537a54cd8eb90f61839426b4266b6
         with:
           filename: metrics.plugin.repositories.owned.svg
           token: ${{ secrets.GH_TOKEN }}
@@ -39,7 +39,7 @@ jobs:
           plugin_repositories_starred: 10
 
       - name: Full history calendar
-        uses: lowlighter/metrics@05b761ce7066e3c897047ecd2431b93af4a5b02b
+        uses: lowlighter/metrics@65836723097537a54cd8eb90f61839426b4266b6
         with:
           filename: metrics.plugin.calendar.full.svg
           token: ${{ secrets.GH_TOKEN }}
