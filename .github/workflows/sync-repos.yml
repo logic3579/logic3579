@@ -64,9 +64,14 @@ jobs:
           OWNER: ${{ github.repository_owner }}
           REPO: ${{ matrix.repo.name }}
         run: |
-          git clone --mirror \
-            "https://x-access-token:${GH_TOKEN}@github.com/${OWNER}/${REPO}.git" \
-            repo.git
+          set -euo pipefail
+          # Basic auth via header — token never appears in the remote URL
+          # (avoids leaks in git error messages / process listings).
+          auth_header() {
+            printf 'AUTHORIZATION: basic %s' "$(printf '%s:%s' "$1" "$2" | base64 | tr -d '\n')"
+          }
+          git -c "http.https://github.com/.extraheader=$(auth_header x-access-token "$GH_TOKEN")" \
+            clone --mirror "https://github.com/${OWNER}/${REPO}.git" repo.git
           # refs/pull/* are GitHub-only PR refs that Gitee rejects as hidden refs.
           git -C repo.git for-each-ref --format='delete %(refname)' refs/pull \
             | git -C repo.git update-ref --stdin
@@ -81,8 +86,13 @@ jobs:
           PRIVATE: ${{ matrix.repo.private }}
           DEFAULT_BRANCH: ${{ matrix.repo.default_branch }}
         run: |
+          set -euo pipefail
+          auth_header() {
+            printf 'AUTHORIZATION: basic %s' "$(printf '%s:%s' "$1" "$2" | base64 | tr -d '\n')"
+          }
           encoded="${OWNER}%2F${REPO}"
-          url="https://oauth2:${GITLAB_TOKEN}@gitlab.com/${OWNER}/${REPO}.git"
+          url="https://gitlab.com/${OWNER}/${REPO}.git"
+          gitlab_auth="$(auth_header oauth2 "$GITLAB_TOKEN")"
 
           status=$(curl -s --retry 3 --retry-delay 5 -o /dev/null -w "%{http_code}" \
             -H "PRIVATE-TOKEN: $GITLAB_TOKEN" \
@@ -107,7 +117,8 @@ jobs:
 
           # GitLab is lenient about HEAD/default-branch reassignment during mirror
           # push, so a single mirror push suffices.
-          git -C repo.git push --mirror "$url"
+          git -C repo.git -c "http.https://gitlab.com/.extraheader=${gitlab_auth}" \
+            push --mirror "$url"
 
       - name: Sync to Gitee
         if: always() && steps.sync_gitlab.conclusion != 'cancelled'
@@ -119,7 +130,12 @@ jobs:
           PRIVATE: ${{ matrix.repo.private }}
           DEFAULT_BRANCH: ${{ matrix.repo.default_branch }}
         run: |
-          url="https://${OWNER}:${GITEE_TOKEN}@gitee.com/${OWNER}/${REPO}.git"
+          set -euo pipefail
+          auth_header() {
+            printf 'AUTHORIZATION: basic %s' "$(printf '%s:%s' "$1" "$2" | base64 | tr -d '\n')"
+          }
+          url="https://gitee.com/${OWNER}/${REPO}.git"
+          gitee_auth="$(auth_header "$OWNER" "$GITEE_TOKEN")"
 
           status=$(curl -s --retry 3 --retry-delay 5 -o /dev/null -w "%{http_code}" \
             -H "Authorization: token $GITEE_TOKEN" \
@@ -143,8 +159,10 @@ jobs:
           # Push heads/tags first so the source's default branch exists on the target
           # before we realign it — Gitee refuses to delete the current default branch
           # during a mirror push.
-          git -C repo.git push "$url" --all
-          git -C repo.git push "$url" --tags
+          git -C repo.git -c "http.https://gitee.com/.extraheader=${gitee_auth}" \
+            push "$url" --all
+          git -C repo.git -c "http.https://gitee.com/.extraheader=${gitee_auth}" \
+            push "$url" --tags
           # PATCH requires `name`; enforce default_branch and visibility (Gitee's own
           # account-level default is `private: true` regardless of the POST payload).
           curl -sSf -X PATCH \
@@ -155,4 +173,5 @@ jobs:
                   '{name: $n, default_branch: $b, private: $p}')" \
             "https://gitee.com/api/v5/repos/${OWNER}/${REPO}" > /dev/null
           # Final mirror push prunes refs that no longer exist on source.
-          git -C repo.git push --mirror "$url"
+          git -C repo.git -c "http.https://gitee.com/.extraheader=${gitee_auth}" \
+            push --mirror "$url"

@@ -35,13 +35,22 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
+          # Basic auth via header — token never appears in the remote URL.
+          auth_header() {
+            printf 'AUTHORIZATION: basic %s' "$(printf '%s:%s' "$1" "$2" | base64 | tr -d '\n')"
+          }
+          github_auth="$(auth_header x-access-token "$GITHUB_TOKEN")"
+          git_gh() {
+            git -c "http.https://github.com/.extraheader=${github_auth}" "$@"
+          }
+
           work=$(mktemp -d)
-          remote="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          remote="https://github.com/${GITHUB_REPOSITORY}.git"
 
           # If the output branch already exists, append on top of it so we don't
           # wipe metrics SVGs. Otherwise create it as a fresh orphan branch.
-          if git ls-remote --exit-code --heads "$remote" output >/dev/null 2>&1; then
-            git clone --depth=1 --single-branch --branch=output "$remote" "$work"
+          if git_gh ls-remote --exit-code --heads "$remote" output >/dev/null 2>&1; then
+            git_gh clone --depth=1 --single-branch --branch=output "$remote" "$work"
             cp dist/snake.svg "$work/snake.svg"
             cd "$work"
             git add snake.svg
@@ -50,7 +59,7 @@ jobs:
               exit 0
             fi
             git commit -m "chore: update contribution snake"
-            git push origin output
+            git_gh push origin output
           else
             cd "$work"
             git init -q -b output
@@ -58,5 +67,5 @@ jobs:
             cp "$GITHUB_WORKSPACE/dist/snake.svg" snake.svg
             git add snake.svg
             git commit -m "chore: seed output branch with snake.svg"
-            git push -u origin output
+            git_gh push -u origin output
           fi
