@@ -106,7 +106,8 @@ _Kubernetes · CI/CD · Cloud._
 
 | Secret | Used by | Minimum access |
 |--------|---------|----------------|
-| `GH_TOKEN` | Metrics, Sync | Classic PAT or fine-grained token: read user repos/metadata; sync also needs clone of owned repos. Metrics uses it for cross-repo stats. |
+| `GH_TOKEN` | Sync | Fine-grained or classic PAT: list/clone owned repos. |
+| `METRICS_TOKEN` | Metrics (optional) | **Classic** PAT only (`repo` scope). Metrics uses GitHub GraphQL, which rejects fine-grained tokens. If unset, falls back to `GITHUB_TOKEN` (current-repo stats only). |
 | `GITLAB_TOKEN` | Sync | `api` scope (create/update projects + git push). GitLab username should match the GitHub login. |
 | `GITEE_TOKEN` | Sync | Private token with repo create/push. Gitee username should match the GitHub login. |
 
