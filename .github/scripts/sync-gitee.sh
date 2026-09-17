@@ -7,7 +7,10 @@ set -euo pipefail
 : "${REPO:?REPO is required}"
 : "${PRIVATE:?PRIVATE is required}"
 : "${DEFAULT_BRANCH:?DEFAULT_BRANCH is required}"
+: "${GITEE_USERNAME:?GITEE_USERNAME is required}"
 DESC="${DESC-}"
+# shellcheck source=endpoints.sh
+source "$(cd "$(dirname "$0")" && pwd)/endpoints.sh"
 
 url="https://gitee.com/${OWNER}/${REPO}.git"
 
@@ -23,7 +26,7 @@ printf '%s\n' \
   '  *Password*) printf "%s\n" "$GITEE_TOKEN" ;;' \
   'esac' >"$askpass"
 chmod 700 "$askpass"
-export GITEE_GIT_USER="$OWNER"
+export GITEE_GIT_USER="$GITEE_USERNAME"
 export GIT_ASKPASS="$askpass"
 export GIT_TERMINAL_PROMPT=0
 
@@ -40,11 +43,12 @@ if [ "$status" = "404" ]; then
   payload=$(jq -n \
     --arg name "$REPO" --arg desc "$DESC" --argjson private "$PRIVATE" \
     '{name: $name, description: $desc, private: $private}')
+  create_url="$(gitee_create_endpoint "$OWNER" "$GITEE_USERNAME")"
   curl -sSf -X POST \
     -H "Authorization: token $GITEE_TOKEN" \
     -H "Content-Type: application/json" \
     -d "$payload" \
-    "https://gitee.com/api/v5/user/repos" > /dev/null
+    "$create_url" > /dev/null
   echo "Created Gitee repo ${OWNER}/${REPO}"
 elif [ "$status" != "200" ]; then
   echo "::error::Gitee API returned $status for ${REPO}"

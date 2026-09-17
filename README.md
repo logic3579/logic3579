@@ -104,9 +104,11 @@ _Kubernetes · GitOps · Multi-cloud · AIOps._
 
 | Secret | Used by | Minimum access |
 |--------|---------|----------------|
-| `GH_TOKEN` | Sync | Fine-grained or classic PAT: list/clone owned repos. |
+| `GH_TOKEN` | Sync | Fine-grained or classic PAT: list/clone owned repos. Fine-grained tokens also have read-only access to public repos, including allowlisted orgs (`SYNC_ORGS`, currently `ArkGravity`). |
 | `METRICS_TOKEN` | Metrics (optional) | **Classic** PAT only (`repo` scope). Metrics uses GitHub GraphQL, which rejects fine-grained tokens. If unset, falls back to `GITHUB_TOKEN` (current-repo stats only). |
-| `GITLAB_TOKEN` | Sync | `api` scope (create/update projects + git push). GitLab username should match the GitHub login. |
-| `GITEE_TOKEN` | Sync | Private token with repo create/push. Gitee username should match the GitHub login. |
+| `GITLAB_TOKEN` | Sync | `api` scope (create/update projects + git push). Personal GitLab username should match the GitHub login. Org repos are created under the matching GitLab group (already created). |
+| `GITEE_TOKEN` | Sync | Private token with repo create/push. Personal Gitee username should match the GitHub login. Org repos are created under the matching Gitee org (already created). |
+
+Sync copies GitHub `owner/name` 1:1 to GitLab and Gitee. Personal private repos are included; organization repos in `SYNC_ORGS` are public-only.
 
 SVG artifacts are published to the `output` branch (not `main`). Metrics and snake share an `output-branch` concurrency group so they do not overwrite each other.

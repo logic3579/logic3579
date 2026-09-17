@@ -13,6 +13,9 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  SYNC_ORGS: ArkGravity
+
 jobs:
   list_repos:
     runs-on: ubuntu-latest
@@ -20,32 +23,60 @@ jobs:
       repos: ${{ steps.list.outputs.repos }}
       count: ${{ steps.list.outputs.count }}
     steps:
-      - name: List owned repositories
+      - name: List owned and org repositories
         id: list
         # actions/github-script@v9
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+        env:
+          SYNC_ORGS: ${{ env.SYNC_ORGS }}
         with:
           github-token: ${{ secrets.GH_TOKEN }}
           script: |
-            const all = await github.paginate(
-              github.rest.repos.listForAuthenticatedUser,
-              { per_page: 100, affiliation: 'owner', sort: 'full_name' }
-            );
-            const repos = all
-              .filter(r => !r.fork && !r.archived)
-              .map(r => ({
-                name: r.name,
-                private: r.private,
-                // 100 chars keeps the matrix outputs well under the 1MB job-output cap
-                // even when the user has hundreds of repos.
-                description: (r.description || '').slice(0, 100),
-                default_branch: r.default_branch,
-              }));
+            const toRepo = (r) => ({
+              owner: r.owner.login,
+              name: r.name,
+              private: r.private,
+              // 100 chars keeps the matrix outputs well under the 1MB job-output cap
+              // even when the user has hundreds of repos.
+              description: (r.description || '').slice(0, 100),
+              default_branch: r.default_branch,
+            });
+            const personal = (
+              await github.paginate(
+                github.rest.repos.listForAuthenticatedUser,
+                { per_page: 100, affiliation: 'owner', sort: 'full_name' }
+              )
+            )
+              .filter((r) => !r.fork && !r.archived)
+              .map(toRepo);
+
+            const orgRepos = [];
+            const orgs = (process.env.SYNC_ORGS || '')
+              .split(/[\s,]+/)
+              .filter(Boolean);
+            for (const org of orgs) {
+              const listed = await github.paginate(
+                github.rest.repos.listForOrg,
+                { org, per_page: 100, type: 'public' }
+              );
+              orgRepos.push(
+                ...listed
+                  .filter((r) => !r.fork && !r.archived && !r.private)
+                  .map(toRepo)
+              );
+            }
+
+            const repos = [...personal, ...orgRepos];
             core.setOutput('repos', JSON.stringify(repos));
             core.setOutput('count', String(repos.length));
             await core.summary
               .addHeading(`Syncing ${repos.length} repositories`)
-              .addList(repos.map(r => `${r.name}${r.private ? ' (private)' : ''}`))
+              .addList(
+                repos.map(
+                  (r) =>
+                    `${r.owner}/${r.name}${r.private ? ' (private)' : ''}`
+                )
+              )
               .write();
 
   sync:
@@ -69,7 +100,7 @@ jobs:
       - name: Mirror clone from GitHub
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          OWNER: ${{ github.repository_owner }}
+          OWNER: ${{ matrix.repo.owner }}
           REPO: ${{ matrix.repo.name }}
         run: bash .github/scripts/mirror-clone-github.sh
 
@@ -77,7 +108,7 @@ jobs:
         id: sync_gitlab
         env:
           GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
-          OWNER: ${{ github.repository_owner }}
+          OWNER: ${{ matrix.repo.owner }}
           REPO: ${{ matrix.repo.name }}
           DESC: ${{ matrix.repo.description }}
           PRIVATE: ${{ matrix.repo.private }}
@@ -88,7 +119,8 @@ jobs:
         if: always() && steps.sync_gitlab.conclusion != 'cancelled'
         env:
           GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
-          OWNER: ${{ github.repository_owner }}
+          GITEE_USERNAME: ${{ github.repository_owner }}
+          OWNER: ${{ matrix.repo.owner }}
           REPO: ${{ matrix.repo.name }}
           DESC: ${{ matrix.repo.description }}
           PRIVATE: ${{ matrix.repo.private }}
