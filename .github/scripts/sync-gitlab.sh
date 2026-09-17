@@ -23,10 +23,26 @@ status=$(curl -s --retry 3 --retry-delay 5 -o /dev/null -w "%{http_code}" \
 
 if [ "$status" = "404" ]; then
   visibility=$([ "$PRIVATE" = "true" ] && echo private || echo public)
+  ns_file="$(mktemp)"
+  ns_status=$(curl -s --retry 3 --retry-delay 5 -o "$ns_file" -w "%{http_code}" \
+    -H "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+    "https://gitlab.com/api/v4/namespaces/${OWNER}")
+  if [ "$ns_status" != "200" ]; then
+    echo "::error::GitLab namespace ${OWNER} not found (HTTP ${ns_status}). Create the group first."
+    rm -f "$ns_file"
+    exit 1
+  fi
+  ns_id=$(jq -r '.id // empty' "$ns_file")
+  rm -f "$ns_file"
+  if [ -z "$ns_id" ]; then
+    echo "::error::GitLab namespace ${OWNER} response had no id"
+    exit 1
+  fi
   payload=$(jq -n \
     --arg name "$REPO" --arg desc "$DESC" \
     --arg vis "$visibility" --arg branch "$DEFAULT_BRANCH" \
-    '{name: $name, description: $desc, visibility: $vis, default_branch: $branch}')
+    --argjson ns "$ns_id" \
+    '{name: $name, path: $name, description: $desc, visibility: $vis, default_branch: $branch, namespace_id: $ns}')
   curl -sSf -X POST \
     -H "PRIVATE-TOKEN: $GITLAB_TOKEN" \
     -H "Content-Type: application/json" \
